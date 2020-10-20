@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__title__ = "Get Current Time"
+__title__ = "Ple Clash Detection"
 
 import os
 import sys
@@ -12,15 +12,15 @@ from Autodesk.Revit.UI import *
 
 
 
-def cal_minDist(vectors, points):
+def cal_MinDist(vectors, points):
+    "Calculate min distance between 2 vectors"
     vec1 = vectors[0]
     vec2 = vectors[1]
     pt1 = points[0]
     pt2 = points[1]
     
-    # Get cross-product:
     n = vec1.CrossProduct(vec2)
-    d = (pt1.Add(pt2.Negate()).DotProduct(n)) / n.GetLength()
+    d = pt1.Add(pt2.Negate()).DotProduct(n) / n.GetLength()
     return d
 
 uidoc = __revit__.ActiveUIDocument
@@ -81,15 +81,17 @@ for id in idsSelected:
         print("Coming Soon!")
         pass
 print("Distance:")
-for i in range(min(len(directionVectorList), len(firstPointList))-1):
-    vectorList = [directionVectorList[i], directionVectorList[i+1]]
-    pointList = [firstPointList[i], firstPointList[i+1]]
-    
-    n = vectorList[0].CrossProduct(vectorList[1])
+seq = min(len(directionVectorList), len(firstPointList))
+for i in range(seq-1):
+    for j in range(i, seq)
+        vectors = [directionVectorList[i], directionVectorList[j]]
+        pointss = [firstPointList[i], firstPointList[j]]
+            for k in range(0, 1, .1)
+                pt1 = points[0].Add(vectors[0].Multiply(k))
+                
     if not n.IsZeroLength():
         
         d = pointList[0].Add(pointList[1].Negate()).DotProduct(n) / n.GetLength()
-
         print(d)
     else:
         
