@@ -50,7 +50,6 @@ def main():
             vertices.append(XYZ(vertex[0], vertex[1], vertex[2]))
             
         # Get texture vertices
-        
         elif split[0] == "vt":
             
             textures.append(split[1:])
@@ -64,51 +63,72 @@ def main():
                 for i in split[1:]:
 
                     # If face contain texture infomation
-                    
                     if "/" in i:
                         
                         index.append(int(i.split("/")[0]))
                         
                     # If face does not contain texture infomation
-                    
                     else:
                         
                         index.append(int(i))
-                        
-            if len(index) == 4:
-
-                tri_Index1 = [index[0], index[1], index[2]]
                 
-                tri_Index2 = [index[1], index[2], index[3]]
-                
-                indices.append(tri_Index1)
-                
-                indices.append(tri_Index2)
+                indices.append(index)
 
     # Close obj file            
-    
     scene.close()
     
+    # Build Tessellated Shape Proxy
+    graphicStyle = FilteredElementCollector(doc).OfClass(GraphicsStyle).ToElements()
+
     defaultMaterial = ElementId(23)
+    
+    graphicStyle = ElementId(132)
     
     builder = TessellatedShapeBuilder()
 
     builder.OpenConnectedFaceSet(False)
     
     for index in indices:
-        loopVertices = List[XYZ](map(lambda i: vertices[i-1], index))
-        builder.AddFace(TessellatedFace(loopVertices, defaultMaterial))
+        
+        loopVertices = List[XYZ](4)
+        
+        for i in index:
+            
+            loopVertices.Add(vertices[i-1])
+            
+        tessellatedFace = TessellatedFace(loopVertices, defaultMaterial)
+        
+        builder.AddFace(tessellatedFace)
+        
+        builder.DoesFaceHaveEnoughLoopsAndVertices(tessellatedFace)
         
     builder.CloseConnectedFaceSet()
     
     builder.Target = TessellatedShapeBuilderTarget.AnyGeometry
     
-    builder.Fallback = TessellatedShapeBuilderFallback.Abort
+    builder.Fallback = TessellatedShapeBuilderFallback.Mesh
+    
+    builder.GraphicsStyleId = graphicStyle
     
     builder.Build()
-    
+        
     result = builder.GetBuildResult()
-    
+
+    # Create Direct Shape
+    trans = Transaction(doc, 'DirectShape')
+    trans.Start()
+    try:
+        directShape = DirectShape.CreateElement(doc, ElementId(BuiltInCategory.OST_GenericModel))
+        
+        directShape.ApplicationId = "Application id"
+        directShape.ApplicationDataId = "Geometry object id"
+        
+        directShape.SetShape(result.GetGeometricalObjects())
+        
+        trans.Commit()
+    except Exception as error:
+        print(error)
+        trans.RollBack()
     # End counting runtime
     time.sleep(1)
     end = time.time()
