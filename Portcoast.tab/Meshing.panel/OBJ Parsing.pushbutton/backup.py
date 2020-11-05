@@ -87,7 +87,7 @@ def main():
     graphicStyle = ElementId(132)
     
     builder = TessellatedShapeBuilder()
-    
+
     builder.OpenConnectedFaceSet(False)
     
     for index in indices:
@@ -102,6 +102,8 @@ def main():
         
         builder.AddFace(tessellatedFace)
         
+        builder.DoesFaceHaveEnoughLoopsAndVertices(tessellatedFace)
+        
     builder.CloseConnectedFaceSet()
     
     builder.Target = TessellatedShapeBuilderTarget.AnyGeometry
@@ -113,6 +115,7 @@ def main():
     builder.Build()
         
     result = builder.GetBuildResult()
+    print(type(result))
     
     # Create Direct Shape
     trans = Transaction(doc, 'DirectShape')
