@@ -28,6 +28,14 @@
         </Style>
     </Window.Resources>
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="7*"/>
+        </Grid.RowDefinitions>
+
+        <ListBox Grid.Row="1" x:Name="lbCategories" Margin="12,12,0,0">
+
+        </ListBox>
+
     </Grid>
 </Window> 
