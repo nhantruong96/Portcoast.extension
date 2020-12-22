@@ -6,7 +6,7 @@
 # =============================================================================
 
 
-__title__ = "Visibility Manager"
+__title__ = "OBJ Importer"
 __Author__ = "Nhan Truong"
 
 org = "Portcoast Consultant Corporation"
@@ -20,6 +20,10 @@ mo = "+84 379197306"
 # =============================================================================
 
 import os
+
+import sys
+
+import io
 
 import clr
 
@@ -37,11 +41,11 @@ import pyrevit
 
 from pyrevit import script
 
-xamlfile = script.get_bundle_file('UI.xaml')
+xamlfile = script.get_bundle_file('ui.xaml')
 
 from System import Uri, UriKind
 
-from System.Windows import Application, Window, Media, Controls
+from System.Windows import Application, Window, Media, Controls, Forms
 
 # =============================================================================
 # 
@@ -53,25 +57,17 @@ uiapp = __revit__
 uidoc = uiapp.ActiveUIDocument
 doc = uidoc.Document
 
-def CategoriesInActiveView():
-    doc = __revit__.ActiveUIDocument.Document
-    viewId = doc.ActiveView.Id
-    elements = FilteredElementCollector(doc, viewId).WhereElementIsNotElementType().ToElements()
-    categories = map(lambda e: e.Category, elements)
-    for c in categories:
-        if c == None:
-            categories.remove(c)
-    category_names = map(lambda c: c.Name, categories)
-    category_name = []
-    for c in category_names:
-        if c not in category_name:
-            category_name.append(c)
-    return category_name
-cbs = []
-for c in CategoriesInActiveView():
-    cb = Controls.CheckBox()
-    cb.Content = c
-    cbs.append(cb)
+# Get input obj
+def get_InputObj():
+    fileDialog = Forms.OpenFileDialog()
+    fileDialog.Filter = "OBJ Geometry Format (*.obj)|*.obj|All files (*.*)|*.*"
+    if fileDialog.ShowDialog() == Forms.DialogResult.OK:
+        objFileName = fileDialog.FileName
+        materialFileName = objFileName.replace('.obj', '.mtl')
+    else:
+        sys.exit()
+    return objFileName, materialFileName
+
 class MyWindow(Window):
 
     def __init__(self):
@@ -80,6 +76,20 @@ class MyWindow(Window):
 
         self.Icon = Media.Imaging.BitmapImage(Uri(dir_name + "\portcoast.ico", UriKind.Relative))
 
-        self.lbCategories.ItemsSource = cbs
+    def btnInputObj_Click(self, sender, args):
+        obj, mtl = get_InputObj()
 
+        vertices = []
+        with open(obj, 'r') as file:
+            lines = file.readlines()
+            for line in lines:
+                if line[0] == 'v':
+                    split_ = line.split()
+                    vertices.append(split_[1:len(split_)])
+        
+
+# Show file dialog & Get Input Obj & Mtl file
+
+# Run UI
 MyWindow().ShowDialog()
+
