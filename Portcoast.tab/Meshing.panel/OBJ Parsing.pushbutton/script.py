@@ -87,7 +87,6 @@ def main():
     graphicStyle = ElementId(132)
     
     builder = TessellatedShapeBuilder()
-    
     builder.OpenConnectedFaceSet(False)
     
     for index in indices:
