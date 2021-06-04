@@ -11,31 +11,25 @@ try:
     from Autodesk.Revit.DB.BuiltInCategory import *
     from Autodesk.Revit.UI import *
 
-    import pyrevit
-    from pyrevit import DB, UI
-
     from datetime import datetime
     
     uidoc = __revit__.ActiveUIDocument
     doc = uidoc.Document
     app = __revit__.Application
     
-    selected_Elements = map(lambda x: doc.GetElement(x), uidoc.Selection.GetElementIds())
+    sels = map(lambda x: doc.GetElement(x), uidoc.Selection.GetElementIds())                                        # Get current selected elements
     
-    # Filter to get Structural Foundations
-    piles_list = list(filter(lambda x: x.Category.Name == "Structural Foundations", selected_Elements))
+    piles_list = list(filter(lambda x: x.Category.Name == "Structural Foundations", sels))                          # Filter to get Structural Foundations
     
-    # Get Project Base Point
-    project_base_point = FilteredElementCollector(doc).OfCategory(OST_ProjectBasePoint).ToElements()[0]
-    a0 = -1*project_base_point.GetParameters("Angle to True North")[0].AsDouble()
+    project_base_point = FilteredElementCollector(doc).OfCategory(OST_ProjectBasePoint).ToElements()[0]             # Get Project Base Point
+    a0 = -1*project_base_point.GetParameters("Angle to True North")[0].AsDouble()                                   # Recalculate Angle to True North
     
-    shared_base_point = FilteredElementCollector(doc).OfCategory(OST_SharedBasePoint).ToElements()[0]
-    y_survey_global = shared_base_point.GetParameters("N/S")[0].AsDouble()
-    x_survey_global = shared_base_point.GetParameters("E/W")[0].AsDouble()
-    vec_survey_global = XYZ(x_survey_global, y_survey_global, 0)
-    survey_vec_negate = shared_base_point.Position.Negate()
+    shared_base_point = FilteredElementCollector(doc).OfCategory(OST_SharedBasePoint).ToElements()[0]               # Get Survey Base Point
+    y_survey_global = shared_base_point.GetParameters("N/S")[0].AsDouble()                                          # Get N/S Component
+    x_survey_global = shared_base_point.GetParameters("E/W")[0].AsDouble()                                          # Get E/W Component
+    vec_survey_global = XYZ(x_survey_global, y_survey_global, 0)                                                    # Create vector pointing to global origin
+    survey_vec_negate = shared_base_point.Position.Negate()                                                         # Then negative it
 
-    # New Coords
     vec_pile_local = []
     for i in piles_list:
         location = i.Location
@@ -54,7 +48,9 @@ try:
         vec_StoP = i.Add(survey_vec_negate)
         x_StoP = vec_StoP.X
         y_StoP = vec_StoP.Y
-        rotated_vec_StoP = XYZ(x_StoP * math.cos(a0) - y_StoP * math.sin(a0), x_StoP * math.sin(a0) + y_StoP * math.cos(a0), 0)
+        new_X = x_StoP * math.cos(a0) - y_StoP * math.sin(a0)
+        new_Y = x_StoP * math.sin(a0) + y_StoP * math.cos(a0)
+        rotated_vec_StoP = XYZ(new_X, new_Y, 0)
         vec = rotated_vec_StoP.Add(vec_survey_global)
         vec_pile_global.append(vec)    
     
@@ -73,8 +69,8 @@ try:
     lastEdited_error_list = []
     
     for px, py, lastEdited, vec in zip(x_param_list, y_param_list, lastEdited_param_list, vec_pile_global):
-        pxOk = px.Set(vec.X)
-        pyOk = py.Set(vec.Y)
+        pxOk = px.Set(vec.Y)
+        pyOk = py.Set(vec.X)
         lastEditedOk = lastEdited.Set(str(datetime.now().strftime("%c")))
         if not pxOk:
             px_error_list.append(px)
