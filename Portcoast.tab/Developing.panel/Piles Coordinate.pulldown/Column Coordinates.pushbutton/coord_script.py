@@ -32,15 +32,14 @@ try:
 
     vec_pile_local = []
     for i in piles_list:
-        location = i.Location
-        if type(location) == LocationCurve:
-            if location.Curve.Direction.Z > 0:
-                vec_pile_local.append(location.Curve.GetEndPoint(1))
-            if location.Curve.Direction.Z < 0:
-                vec_pile_local.append(location.Curve.GetEndPoint(0))
-        elif type(location) == LocationPoint:
-            top_level = i.get_Parameter(BuiltInParameter.FAMILY_TOP_LEVEL_PARAM).AsDouble() + i.get_Parameter(BuiltInParameter.FAMILY_TOP_LEVEL_OFFSET_PARAM).AsDouble()
-            point = location.Point
+        location = i.Location                                                                                       # Get location of every pile in selection
+        if type(location) == LocationCurve:                                                                         ## if location is a curve
+            if location.Curve.Direction.Z > 0:                                                                      # If direction is up
+                vec_pile_local.append(location.Curve.GetEndPoint(1))                                                # Get end point
+            if location.Curve.Direction.Z < 0:                                                                      # If direction is down
+                vec_pile_local.append(location.Curve.GetEndPoint(0))                                                # Get start point
+        elif type(location) == LocationPoint:                                                                       ## If location is point
+            top_level = i.get_Parameter(BuiltInParameter.FAMILY_TOP_LEVEL_PARAM).AsDouble() + i.get_Parameter(BuiltInParameter.FAMILY_TOP_LEVEL_OFFSET_PARAM).AsDouble()    # Get pile cap elevation                                               
             vec_pile_local.append(location.Point.Add(XYZ(0,0,top_level)))
 
     vec_pile_global = []
